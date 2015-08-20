@@ -32,7 +32,8 @@ func send(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad Request Method", 500)
 		return
 	}
-	R.Put(Message{"george", "Hello", time.Now()})
+	r.ParseForm()
+	R.Put(Message{Name: r.Form.Get("name"), Message: r.Form.Get("message"), Time: time.Now()})
 }
 
 func await(w http.ResponseWriter, r *http.Request) {
