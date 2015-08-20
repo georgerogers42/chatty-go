@@ -14,6 +14,7 @@ var App = mux.NewRouter()
 func init() {
 	App.HandleFunc("/", home)
 	App.HandleFunc("/send", send)
+	App.HandleFunc("/recv", recv)
 	App.HandleFunc("/await", await)
 }
 
@@ -38,6 +39,16 @@ func send(w http.ResponseWriter, r *http.Request) {
 
 func await(w http.ResponseWriter, r *http.Request) {
 	m := R.Await()
+	s, err := json.Marshal(m)
+	if err != nil {
+		panic(err)
+	}
+	w.Header().Add("content-type", "application/json")
+	fmt.Fprintln(w, string(s))
+}
+
+func recv(w http.ResponseWriter, r *http.Request) {
+	m := R.Recv()
 	s, err := json.Marshal(m)
 	if err != nil {
 		panic(err)
