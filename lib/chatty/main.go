@@ -41,13 +41,14 @@ func await(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+	w.Header("content-type", "application/json")
 	fmt.Fprintln(w, string(s))
 }
 
 type Message struct {
 	Name    string
-	Message string
 	Time    time.Time
+	Message string
 }
 
 func (m Message) String() string {
