@@ -41,7 +41,7 @@ func await(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	w.Header("content-type", "application/json")
+	w.Header().Add("content-type", "application/json")
 	fmt.Fprintln(w, string(s))
 }
 
