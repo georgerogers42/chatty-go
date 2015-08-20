@@ -1,0 +1,10 @@
+body {
+  background-color: black;
+  color: #0f0;
+  font-family: 'Inconsolata', monospace;
+}
+
+div#chat-scroll {
+  height: 6in;
+  overflow: scroll;
+}
