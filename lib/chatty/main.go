@@ -105,5 +105,5 @@ func New() Reactor {
 			}
 		}
 	}()
-	return Reactor{a, p}
+	return Reactor{await: a, recv: r, put: p}
 }
