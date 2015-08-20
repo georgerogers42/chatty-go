@@ -61,14 +61,22 @@ type Await chan<- Messages
 type Put chan<- Message
 
 type Reactor struct {
-	await chan<- Await
-	put   chan<- Message
+	await, recv chan<- Await
+	put         chan<- Message
+}
+
+func awaitFor(c chan<- Await) Messages {
+	x := make(chan Messages, 1)
+	c <- x
+	return <-x
 }
 
 func (r Reactor) Await() Messages {
-	x := make(chan Messages, 1)
-	r.await <- x
-	return <-x
+	return awaitFor(r.await)
+}
+
+func (r Reactor) Recv() Messages {
+	return awaitFor(r.recv)
 }
 
 func (r Reactor) Put(m Message) {
@@ -76,13 +84,15 @@ func (r Reactor) Put(m Message) {
 }
 
 func New() Reactor {
-	a, p := make(chan Await), make(chan Message)
+	a, r, p := make(chan Await), make(chan Await), make(chan Message)
 	go func() {
 		aqs, ms := []Await{}, Messages{}
 		for {
 			select {
 			case aq := <-a:
 				aqs = append(aqs, aq)
+			case rx := <-r:
+				rx <- append(Messages{}, ms...)
 			case m := <-p:
 				ms = append(ms, m)
 				for i := range aqs {
