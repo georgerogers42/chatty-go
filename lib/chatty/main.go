@@ -1,10 +1,12 @@
 package chatty
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"html/template"
 	"net/http"
+	"time"
 )
 
 var App = mux.NewRouter()
@@ -30,25 +32,26 @@ func send(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad Request Method", 500)
 		return
 	}
-	R.Put <- Message{"george", "Hello"}
+	R.Put(Message{"george", "Hello", time.Now()})
 }
 
 func await(w http.ResponseWriter, r *http.Request) {
-	x := make(chan Messages, 1)
-	R.Await <- x
-	m := <-x
-	for _, msg := range m {
-		fmt.Fprintln(w, msg)
+	m := R.Await()
+	s, err := json.Marshal(m)
+	if err != nil {
+		panic(err)
 	}
+	fmt.Fprintln(w, string(s))
 }
 
 type Message struct {
 	Name    string
 	Message string
+	Time    time.Time
 }
 
 func (m Message) String() string {
-	return fmt.Sprintf("%s: %s", m.Name, m.Message)
+	return fmt.Sprintf("%s: %s: %s", m.Time, m.Name, m.Message)
 }
 
 type Messages []Message
@@ -56,11 +59,21 @@ type Await chan<- Messages
 type Put chan<- Message
 
 type Reactor struct {
-	Await chan<- Await
-	Put   chan<- Message
+	await chan<- Await
+	put   chan<- Message
 }
 
-func New() *Reactor {
+func (r Reactor) Await() Messages {
+	x := make(chan Messages, 1)
+	r.await <- x
+	return <-x
+}
+
+func (r Reactor) Put(m Message) {
+	r.put <- m
+}
+
+func New() Reactor {
 	a, p := make(chan Await), make(chan Message)
 	go func() {
 		aqs, ms := []Await{}, Messages{}
@@ -80,5 +93,5 @@ func New() *Reactor {
 			}
 		}
 	}()
-	return &Reactor{a, p}
+	return Reactor{a, p}
 }

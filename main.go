@@ -10,6 +10,7 @@ import (
 
 func main() {
 	http.Handle("/", chatty.App)
+	http.Handle("/static/", http.FileServer(http.Dir("public")))
 	port := os.ExpandEnv(":$PORT")
 	fmt.Println("Listening on", port)
 	log.Fatal(http.ListenAndServe(port, nil))
