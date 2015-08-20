@@ -1,0 +1,9 @@
+<!doctype html>
+<html>
+  <head>
+    {{ template "head" . }} 
+  </head>
+  <body>
+    {{ template "body" . }}
+  </body>
+</html>
