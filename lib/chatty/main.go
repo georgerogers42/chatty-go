@@ -70,10 +70,12 @@ func (m Message) String() string {
 type Messages []Message
 type Await chan<- Messages
 type Put chan<- Message
+type Exit chan<- error
 
 type Reactor struct {
 	await, recv chan<- Await
-	put         chan<- Message
+	quit        chan<- Exit
+	put         Put
 }
 
 func awaitFor(c chan<- Await) Messages {
@@ -95,11 +97,15 @@ func (r Reactor) Put(m Message) {
 }
 
 func New() Reactor {
-	a, r, p := make(chan Await), make(chan Await), make(chan Message)
+	a, r := make(chan Await), make(chan Await)
+	p, q := make(chan Message), make(chan Exit)
 	go func() {
 		aqs, ms := []Await{}, Messages{}
 		for {
 			select {
+			case e := <-q:
+				e <- nil
+				return
 			case aq := <-a:
 				aqs = append(aqs, aq)
 			case rx := <-r:
@@ -116,5 +122,5 @@ func New() Reactor {
 			}
 		}
 	}()
-	return Reactor{await: a, recv: r, put: p}
+	return Reactor{await: a, recv: r, put: p, quit: q}
 }
